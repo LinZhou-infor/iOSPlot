@@ -47,7 +47,7 @@
 		_lineChartView = [[PCLineChartView alloc] initWithFrame:CGRectMake(10,10,[self.view bounds].size.width-20,[self.view bounds].size.height-20)];
 		[_lineChartView setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
 		_lineChartView.minValue = -40;
-		_lineChartView.maxValue = 100;
+		_lineChartView.maxValue = 100;//_lineChartView.autoscaleYAxis = YES;
 		[self.view addSubview:_lineChartView];
 		
 		NSString *sampleFile = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"sample_linechart_data.json"];
@@ -56,12 +56,12 @@
         NSDictionary *sampleInfo = [jsonString objectFromJSONString];
         
         NSMutableArray *components = [NSMutableArray array];
-		for (int i=0; i<[[sampleInfo objectForKey:@"data"] count]; i++)
+		for (int i=4; i<[[sampleInfo objectForKey:@"data"] count]; i++)
 		{
 			NSDictionary *point = [[sampleInfo objectForKey:@"data"] objectAtIndex:i];
 			PCLineChartViewComponent *component = [[PCLineChartViewComponent alloc] init];
 			[component setTitle:[point objectForKey:@"title"]];
-			[component setPoints:[point objectForKey:@"data"]];
+			[component setPoints:[NSMutableArray arrayWithArray:[point objectForKey:@"data"]]];
 			[component setShouldLabelValues:NO];
 			
 			if (i==0)
@@ -88,11 +88,12 @@
 			[components addObject:component];
 		}
 		[_lineChartView setComponents:components];
-		[_lineChartView setXLabels:[sampleInfo objectForKey:@"x_labels"]];
-	}
+        [_lineChartView setXLabels:[sampleInfo objectForKey:@"x_labels"]];
+        _lineChartView.dragType = LineChartDragTypeVertical;
+    }
+    
 	return self;
 }
-
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {

@@ -149,9 +149,9 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
+				F897D6E513630F4B0025FE6E /* Sample Data */,
 				F83260A81363D8170045F9DC /* back_button.png */,
 				F83260A91363D8170045F9DC /* back_button@2x.png */,
-				F897D6E513630F4B0025FE6E /* Sample Data */,
 				32CA4F630368D1EE00C91783 /* PlotCreator_Prefix.pch */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 			);

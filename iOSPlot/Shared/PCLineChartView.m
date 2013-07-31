@@ -31,7 +31,17 @@
  *
  */
 
+#define VERTICAL_TOP_MARGIN     35
+#define VERTICAL_BOTTOM_MARGIN  25
+#define HORIZONTAL_MARGIN       45
+
 #import "PCLineChartView.h"
+
+@interface PCLineChartViewComponent ()
+// a helper private property used in user interaction calculation
+// contains NSValue objects that wrap CGRect struct
+@property (nonatomic, strong) NSMutableArray *pointLocationsInView;
+@end
 
 @implementation PCLineChartViewComponent
 
@@ -39,6 +49,7 @@
 	self = [super init];
 	if (self) {
 		_labelFormat = @"%.1f%%";
+        _pointLocationsInView = [NSMutableArray arrayWithCapacity:20];
 	}
 	return self;
 }
@@ -46,6 +57,13 @@
 @end
 
 @implementation PCLineChartView
+{
+    // all these instance fields are for user interaction
+    BOOL touchMoved;
+    PCLineChartViewComponent *currentSelectedComponent;
+    NSInteger currentSelectedDataPointIndex;
+    CGPoint touchInitialLocation;
+}
 
 - (id)initWithFrame:(CGRect)frame {
 	self = [super initWithFrame:frame];
@@ -61,6 +79,7 @@
 		_numYIntervals = 5;
 		_numXIntervals = 1;
 		_yLabelAlignment = NSTextAlignmentRight;
+        _dragType = LineChartDragTypeNone;
 	}
 	return self;
 }
@@ -73,8 +92,8 @@
 	int n_div;
 	int power;
 	float scale_min, scale_max, div_height;
-	float top_margin = 35;
-	float bottom_margin = 25;
+	float top_margin = VERTICAL_TOP_MARGIN;
+	float bottom_margin = VERTICAL_BOTTOM_MARGIN;
 	float x_label_height = 20;
 
 	if (self.autoscaleYAxis) {
@@ -89,6 +108,8 @@
 		scale_min = self.minValue;
 		scale_max = self.maxValue;
 	}
+    
+    // start to draw horizontal grid lines
 	n_div = (scale_max-scale_min)/self.interval + 1;
 	div_height = (self.frame.size.height-top_margin-bottom_margin-x_label_height)/(n_div-1);
 
@@ -106,7 +127,10 @@
 		} else {
 			text = [NSString stringWithFormat:formatString, y_axis];
 		}
-		[text drawInRect:textFrame withFont:self.yLabelFont lineBreakMode:NSLineBreakByWordWrapping alignment:self.yLabelAlignment];
+		[text drawInRect:textFrame
+                withFont:self.yLabelFont
+           lineBreakMode:NSLineBreakByWordWrapping
+               alignment:self.yLabelAlignment];
 
 		// These are "grid" lines
 		CGContextSetLineWidth(ctx, 1);
@@ -115,8 +139,10 @@
 		CGContextAddLineToPoint(ctx, self.frame.size.width-30, y);
 		CGContextStrokePath(ctx);
 	}
-
-	float margin = 45;
+    // end of drawing horizontal grid lines
+    
+    // start to draw x axis
+	float margin = HORIZONTAL_MARGIN;
 	float div_width;
 	if ([self.xLabels count] == 1) {
 		div_width = 0;
@@ -135,7 +161,12 @@
 								alignment:NSTextAlignmentCenter];
 		};
 	}
-
+    // end of drawing x axis
+    
+    // there's no main x axis and y axis
+    // just a reminder
+    
+    // set shadow for the lines in chart
 	CGColorRef shadowColor = [[UIColor lightGrayColor] CGColor];
 	CGContextSetShadowWithColor(ctx, CGSizeMake(0,-1), 1, shadowColor);
 
@@ -168,6 +199,15 @@
 				CGRect circleRect = CGRectMake(x-circle_diameter/2, y-circle_diameter/2, circle_diameter,circle_diameter);
 				CGContextStrokeEllipseInRect(ctx, circleRect);
 
+                float touchableDiameter = 30.f;
+                CGRect circleTouchableRect = CGRectMake(x-touchableDiameter/2, y-touchableDiameter/2, touchableDiameter, touchableDiameter);
+                NSValue *rectValue = [NSValue valueWithCGRect:circleTouchableRect];
+                if ([component.pointLocationsInView count]<=x_axis_index) {
+                    [component.pointLocationsInView addObject:rectValue];
+                }else{
+                    [component.pointLocationsInView replaceObjectAtIndex:x_axis_index withObject:rectValue];
+                }
+                
 				CGContextSetFillColorWithColor(ctx, [component.colour CGColor]);
 
 				if (last_x!=0 && last_y!=0) {
@@ -272,6 +312,56 @@
 
 		y_level = y + 15;
 	}
+}
+
+#pragma mark - UIResponder Methods
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [super touchesBegan:touches withEvent:event];
+    touchMoved = NO;
+    if (_dragType == LineChartDragTypeVertical) {
+        currentSelectedComponent = nil;
+        currentSelectedDataPointIndex = NSNotFound;
+        
+        CGPoint point = [[touches anyObject] locationInView:self];
+        for (PCLineChartViewComponent *component in self.components) {
+            for (int i=0; i<[component.pointLocationsInView count];i++) {
+                NSValue *value = [component.pointLocationsInView objectAtIndex:i];
+                CGRect touchRect = [value CGRectValue];
+                if (CGRectContainsPoint(touchRect, point)) {
+                    NSLog(@"%d", i);
+                    currentSelectedComponent = component;
+                    currentSelectedDataPointIndex = i;
+                    touchInitialLocation = point;
+                }
+            }
+        }
+    }
+}
+
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [super touchesMoved:touches withEvent:event];
+    touchMoved = YES;
+    if (_dragType == LineChartDragTypeVertical && currentSelectedComponent && currentSelectedDataPointIndex!=NSNotFound) {
+        UITouch *touch = [touches anyObject];
+        
+        
+    }
+}
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [super touchesEnded:touches withEvent:event];
+    if (_dragType == LineChartDragTypeVertical && touchMoved) {
+        
+    }
+}
+
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [super touchesCancelled:touches withEvent:event];
 }
 
 @end

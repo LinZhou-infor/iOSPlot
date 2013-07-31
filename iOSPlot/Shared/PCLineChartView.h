@@ -35,7 +35,9 @@
 
 @interface PCLineChartViewComponent : NSObject
 @property (nonatomic, assign) BOOL shouldLabelValues;
-@property (nonatomic, strong) NSArray *points;
+// make the array that holds point data mutable
+// to support user interaction
+@property (nonatomic, strong) NSMutableArray *points;
 @property (nonatomic, strong) UIColor *colour;
 @property (nonatomic, copy) NSString *title, *labelFormat;
 @end
@@ -46,6 +48,13 @@
 #define PCColorRed [UIColor colorWithRed:1.0 green:51/255.0 blue:51/255.0 alpha:1.0]
 #define PCColorYellow [UIColor colorWithRed:1.0 green:220/255.0 blue:0.0 alpha:1.0]
 #define PCColorDefault [UIColor colorWithRed:0.5 green:0.5 blue:0.5 alpha:1.0]
+
+typedef enum{
+    LineChartDragTypeNone = 0,
+    LineChartDragTypeHorizontal,
+    LineChartDragTypeVertical,
+    LineChartDragTypeBothDirections
+} LineChartDragType;
 
 @interface PCLineChartView : UIView
 @property (nonatomic, assign) float interval;
@@ -69,5 +78,8 @@
 /// Alignment of labels in Y axis (right by default)
 ///
 @property (nonatomic) NSTextAlignment yLabelAlignment;
+
+// User interaction settings
+@property (nonatomic, assign) LineChartDragType dragType;
 
 @end
