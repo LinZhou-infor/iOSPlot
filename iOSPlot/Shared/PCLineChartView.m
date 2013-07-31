@@ -34,6 +34,8 @@
 #define VERTICAL_TOP_MARGIN     35
 #define VERTICAL_BOTTOM_MARGIN  25
 #define HORIZONTAL_MARGIN       45
+#define X_AXIS_TEXT_HEIGHT      20
+#define TOUCHABLE_DIAMETER      40
 
 #import "PCLineChartView.h"
 
@@ -58,11 +60,13 @@
 
 @implementation PCLineChartView
 {
+    float scale_min, scale_max;
     // all these instance fields are for user interaction
     BOOL touchMoved;
     PCLineChartViewComponent *currentSelectedComponent;
-    NSInteger currentSelectedDataPointIndex;
+    NSInteger currentSelectedPointIndex;
     CGPoint touchInitialLocation;
+    int initialValue;
 }
 
 - (id)initWithFrame:(CGRect)frame {
@@ -91,10 +95,10 @@
 
 	int n_div;
 	int power;
-	float scale_min, scale_max, div_height;
+	float div_height;
 	float top_margin = VERTICAL_TOP_MARGIN;
 	float bottom_margin = VERTICAL_BOTTOM_MARGIN;
-	float x_label_height = 20;
+	float x_label_height = X_AXIS_TEXT_HEIGHT;
 
 	if (self.autoscaleYAxis) {
 		scale_min = 0.0;
@@ -199,8 +203,7 @@
 				CGRect circleRect = CGRectMake(x-circle_diameter/2, y-circle_diameter/2, circle_diameter,circle_diameter);
 				CGContextStrokeEllipseInRect(ctx, circleRect);
 
-                float touchableDiameter = 30.f;
-                CGRect circleTouchableRect = CGRectMake(x-touchableDiameter/2, y-touchableDiameter/2, touchableDiameter, touchableDiameter);
+                CGRect circleTouchableRect = CGRectMake(x-TOUCHABLE_DIAMETER/2, y-TOUCHABLE_DIAMETER/2, TOUCHABLE_DIAMETER, TOUCHABLE_DIAMETER);
                 NSValue *rectValue = [NSValue valueWithCGRect:circleTouchableRect];
                 if ([component.pointLocationsInView count]<=x_axis_index) {
                     [component.pointLocationsInView addObject:rectValue];
@@ -322,7 +325,7 @@
     touchMoved = NO;
     if (_dragType == LineChartDragTypeVertical) {
         currentSelectedComponent = nil;
-        currentSelectedDataPointIndex = NSNotFound;
+        currentSelectedPointIndex = NSNotFound;
         
         CGPoint point = [[touches anyObject] locationInView:self];
         for (PCLineChartViewComponent *component in self.components) {
@@ -330,10 +333,10 @@
                 NSValue *value = [component.pointLocationsInView objectAtIndex:i];
                 CGRect touchRect = [value CGRectValue];
                 if (CGRectContainsPoint(touchRect, point)) {
-                    NSLog(@"%d", i);
                     currentSelectedComponent = component;
-                    currentSelectedDataPointIndex = i;
-                    touchInitialLocation = point;
+                    currentSelectedPointIndex = i;
+                    touchInitialLocation = point;                    
+                    initialValue = [[component.points objectAtIndex:i] intValue];
                 }
             }
         }
@@ -344,10 +347,13 @@
 {
     [super touchesMoved:touches withEvent:event];
     touchMoved = YES;
-    if (_dragType == LineChartDragTypeVertical && currentSelectedComponent && currentSelectedDataPointIndex!=NSNotFound) {
+    if (_dragType == LineChartDragTypeVertical && currentSelectedComponent && currentSelectedPointIndex!=NSNotFound) {
         UITouch *touch = [touches anyObject];
-        
-        
+        float pixelMoved = touchInitialLocation.y-[touch locationInView:self].y;//
+        float valuePerPixel = (scale_max-scale_min)/(self.frame.size.height-VERTICAL_TOP_MARGIN-VERTICAL_BOTTOM_MARGIN-X_AXIS_TEXT_HEIGHT);
+        int newValue = initialValue+pixelMoved*valuePerPixel;
+        [currentSelectedComponent.points replaceObjectAtIndex:currentSelectedPointIndex withObject:[NSNumber numberWithInt:newValue]];
+        [self setNeedsDisplay];
     }
 }
 
