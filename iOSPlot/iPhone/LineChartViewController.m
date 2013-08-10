@@ -89,6 +89,7 @@
 		}
 		[_lineChartView setComponents:components];
         [_lineChartView setXLabels:[sampleInfo objectForKey:@"x_labels"]];
+        [_lineChartView setVisibleXLables:[NSMutableArray arrayWithObjects:@2006, @2008, nil]];
         _lineChartView.dragType = LineChartDragTypeVertical;
     }
     

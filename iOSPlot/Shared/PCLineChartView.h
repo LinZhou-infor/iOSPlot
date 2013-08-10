@@ -60,7 +60,7 @@ typedef enum{
 @property (nonatomic, assign) float interval;
 @property (nonatomic, assign) float minValue;
 @property (nonatomic, assign) float maxValue;
-@property (nonatomic, strong) NSMutableArray *components, *xLabels;
+@property (nonatomic, strong) NSMutableArray *components, *xLabels, *visibleXLables;
 @property (nonatomic, strong) UIFont *yLabelFont, *xLabelFont, *valueLabelFont, *legendFont;
 // Use these to autoscale the y axis to 'nice' values.
 // If used, minValue is ignored (0) and interval computed internally

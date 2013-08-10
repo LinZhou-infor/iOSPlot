@@ -157,12 +157,20 @@
 	for (NSUInteger i=0; i<[self.xLabels count]; i++) {
 		if (i % self.numXIntervals == 1 || self.numXIntervals==1) {
 			int x = (int) (margin + div_width * i);
-			NSString *x_label = [NSString stringWithFormat:@"%@", [self.xLabels objectAtIndex:i]];
-			CGRect textFrame = CGRectMake(x - 100, self.frame.size.height - x_label_height, 200, x_label_height);
-			[x_label drawInRect:textFrame
-								 withFont:self.xLabelFont
-						lineBreakMode:NSLineBreakByWordWrapping
-								alignment:NSTextAlignmentCenter];
+            BOOL shouldShowXLable = YES;
+            NSString *xLabel = [self.xLabels objectAtIndex:i];
+            if ([self.visibleXLables count] && ![self.visibleXLables containsObject:xLabel]) {
+                shouldShowXLable = NO;
+            }
+            
+            if (shouldShowXLable) {
+                NSString *x_label = [NSString stringWithFormat:@"%@", [self.xLabels objectAtIndex:i]];
+                CGRect textFrame = CGRectMake(x - 100, self.frame.size.height - x_label_height, 200, x_label_height);
+                [x_label drawInRect:textFrame
+                           withFont:self.xLabelFont
+                      lineBreakMode:NSLineBreakByWordWrapping
+                          alignment:NSTextAlignmentCenter];
+            }
 		};
 	}
     // end of drawing x axis
