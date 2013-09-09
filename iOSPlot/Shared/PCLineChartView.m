@@ -323,6 +323,8 @@
 
 		y_level = y + 15;
 	}
+    
+    UIGraphicsPopContext();
 }
 
 #pragma mark - UIResponder Methods
