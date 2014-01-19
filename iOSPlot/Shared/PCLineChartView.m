@@ -131,11 +131,9 @@
 		} else {
 			text = [NSString stringWithFormat:formatString, y_axis];
 		}
-		[text drawInRect:textFrame
-                withFont:self.yLabelFont
-           lineBreakMode:NSLineBreakByWordWrapping
-               alignment:self.yLabelAlignment];
-
+        NSDictionary* attributes = [self attributesForFont:self.yLabelFont lineBreakMode:NSLineBreakByWordWrapping andAlignment:self.yLabelAlignment];
+		[text drawInRect:textFrame withAttributes:attributes];
+        
 		// These are "grid" lines
 		CGContextSetLineWidth(ctx, 1);
 		CGContextSetRGBStrokeColor(ctx, 0.4f, 0.4f, 0.4f, 0.1f);
@@ -166,10 +164,8 @@
             if (shouldShowXLable) {
                 NSString *x_label = [NSString stringWithFormat:@"%@", [self.xLabels objectAtIndex:i]];
                 CGRect textFrame = CGRectMake(x - 100, self.frame.size.height - x_label_height, 200, x_label_height);
-                [x_label drawInRect:textFrame
-                           withFont:self.xLabelFont
-                      lineBreakMode:NSLineBreakByWordWrapping
-                          alignment:NSTextAlignmentCenter];
+                NSDictionary* attributes = [self attributesForFont:self.xLabelFont lineBreakMode:NSLineBreakByWordWrapping andAlignment:NSTextAlignmentCenter];
+                [x_label drawInRect:textFrame withAttributes:attributes];
             }
 		};
 	}
@@ -266,34 +262,29 @@
 				int y2 = y + circle_diameter/2;
 
 				if ([[self.components objectAtIndex:j] shouldLabelValues]) {
+                    NSDictionary* attributes = [self attributesForFont:self.valueLabelFont lineBreakMode:NSLineBreakByWordWrapping andAlignment:NSTextAlignmentCenter];
+                    
 					if (y1 > y_level) {
 						CGContextSetRGBFillColor(ctx, 0.0f, 0.0f, 0.0f, 1.0f);
 						NSString *perc_label = [NSString stringWithFormat:[[self.components objectAtIndex:j] labelFormat], value];
 						CGRect textFrame = CGRectMake(x-25,y1, 50,20);
-						[perc_label drawInRect:textFrame
-													withFont:self.valueLabelFont
-										 lineBreakMode:NSLineBreakByWordWrapping
-												 alignment:NSTextAlignmentCenter];
+                        
+                        [perc_label drawInRect:textFrame withAttributes:attributes];
+						
 						y_level = y1 + 20;
 					}
 					else if (y2 < y_level+20 && y2 < self.frame.size.height-top_margin-bottom_margin) {
 						CGContextSetRGBFillColor(ctx, 0.0f, 0.0f, 0.0f, 1.0f);
 						NSString *perc_label = [NSString stringWithFormat:[[self.components objectAtIndex:j] labelFormat], value];
 						CGRect textFrame = CGRectMake(x-25,y2, 50,20);
-						[perc_label drawInRect:textFrame
-													withFont:self.valueLabelFont
-										 lineBreakMode:NSLineBreakByWordWrapping
-												 alignment:NSTextAlignmentCenter];
+						[perc_label drawInRect:textFrame withAttributes:attributes];
 						y_level = y2 + 20;
 					}
 					else {
 						CGContextSetRGBFillColor(ctx, 0.0f, 0.0f, 0.0f, 1.0f);
 						NSString *perc_label = [NSString stringWithFormat:[[self.components objectAtIndex:j] labelFormat], value];
 						CGRect textFrame = CGRectMake(x-50,y-10, 50,20);
-						[perc_label drawInRect:textFrame
-													withFont:self.valueLabelFont
-										 lineBreakMode:NSLineBreakByWordWrapping
-												 alignment:NSTextAlignmentCenter];
+						[perc_label drawInRect:textFrame withAttributes:attributes];
 						y_level = y1 + 20;
 					}
 				}
@@ -319,7 +310,9 @@
 		}
 
 		CGRect textFrame = CGRectMake(x,y,margin,15);
-		[title drawInRect:textFrame withFont:self.legendFont];
+
+        NSDictionary *attributes = @{ NSFontAttributeName: self.legendFont};
+		[title drawInRect:textFrame withAttributes:attributes];
 
 		y_level = y + 15;
 	}
@@ -376,6 +369,17 @@
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
     [super touchesCancelled:touches withEvent:event];
+}
+
+#pragma mark - Helper methods
+
+- (NSDictionary*)attributesForFont:(UIFont*)font lineBreakMode:(NSLineBreakMode)lineBreakMode andAlignment:(NSTextAlignment)alignment {
+    NSMutableParagraphStyle *paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    paragraphStyle.lineBreakMode = lineBreakMode;
+    paragraphStyle.alignment = alignment;
+    NSDictionary *attributes = @{ NSFontAttributeName: font,
+                                  NSParagraphStyleAttributeName: paragraphStyle };
+    return attributes;
 }
 
 @end
